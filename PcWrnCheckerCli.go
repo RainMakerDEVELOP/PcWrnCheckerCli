@@ -1,7 +1,6 @@
 package main
 
 import "fmt"
-import "pwc_arg"
 
 func main() {
 	fmt.Println("-------------------------------------------------")
