@@ -1,11 +1,17 @@
 package main
 
-import "fmt"
+import (
+	cliproc "PcWrnChecker/PcWrnCheckerCli/pwcpkg"
+	"fmt"
+)
 
 func main() {
 	fmt.Println("-------------------------------------------------")
 	fmt.Println("---------- Pc Wrn Checker Client Start ----------")
 	fmt.Println("-------------------------------------------------")
+
+	// 실제 모든 데이터 처리를 PcWrnCheckerCliProc 으로 명명된 cliproc 패키지에서 하도록 한다.
+	cliproc.Run()
 
 	fmt.Println("-------------------------------------------------")
 	fmt.Println("---------- Pc Wrn Checker Client End   ----------")
