@@ -4,8 +4,37 @@
 
 package cliproc
 
-import "fmt"
+import (
+	"fmt"
+	"os"
+	"strings"
+)
 
-func Run() {
-	fmt.Println("This is CliProc Run Function!")
+func Run() bool {
+	fmt.Println("CliProc Run Function Start!")
+
+	// 실행인자 체크 루틴 실행
+	if !readArg() {
+		return
+	}
+}
+
+func readArg() (bRet bool) {
+	bRet = false
+	var argCnt int
+	var arg string
+	for _, v := range os.Args {
+		if strings.Index(v, "-type") == 0 {
+			arg = strings.Replace(v, "-type=", "", -1)
+			argCnt++
+		}
+	}
+
+	fmt.Println(arg, argCnt)
+
+	if argCnt >= 2 {
+		bRet = true
+	}
+
+	return
 }
