@@ -8,6 +8,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
@@ -61,10 +62,23 @@ func Run() bool {
 
 	defer resp.Body.Close()
 
+	var respData RestData
+
 	// [PROC] 첫번째 전송 성공인지 응답 체크
 	if resp.StatusCode == http.StatusOK {
 		// goroutine 실행하여 주기적으로 전송
-		// resp.Body.Read
+		body, errIoRead := ioutil.ReadAll(resp.Body)
+		if errIoRead != nil {
+			log.Panicln(errIoRead.Error())
+		} else {
+			errUnmarshal := json.Unmarshal(body, &respData)
+
+			if errUnmarshal != nil {
+				log.Panicln(errUnmarshal.Error())
+			} else {
+				fmt.Printf("Response Data Parse : '%v'\n", respData)
+			}
+		}
 	}
 
 	// [PROC] 주기적 전송 루틴이 goroutine 으로 실행되므로, goroutine 종료전에 리턴되면 안되므로 체크하여 기다리는 루틴 삽입
