@@ -9,7 +9,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -59,12 +58,12 @@ func Run() bool {
 			// 응답 데이터 파싱 테스트용 코드 START
 			body, errIoRead := io.ReadAll(resp.Body)
 			if errIoRead != nil {
-				log.Panicln(errIoRead.Error())
+				fmt.Printf("io.ReadAll Error : '%v'\n", errIoRead.Error())
 			} else {
 				errUnmarshal := json.Unmarshal(body, &respData)
 
 				if errUnmarshal != nil {
-					log.Panicln(errUnmarshal.Error())
+					fmt.Printf("json.Unmarshal Error : '%v'\n", errUnmarshal.Error())
 				} else {
 					fmt.Printf("Response Data Parse : '%v'\n", respData)
 				}
@@ -116,7 +115,7 @@ func reqClient(strSendData string, strContentType string) (*http.Response, bool)
 	// 서버 전송용 JSON 설정
 	btSendData, marshalErr := makeJsonData(strSendData)
 	if marshalErr != nil {
-		log.Panicln(marshalErr.Error())
+		fmt.Printf("makeJsonData Error : '%v'\n", marshalErr.Error())
 		return nil, false
 	}
 
@@ -124,15 +123,22 @@ func reqClient(strSendData string, strContentType string) (*http.Response, bool)
 		fmt.Printf("marshaling data return len = '%v'\n", len(btSendData))
 		return nil, false
 	}
-	fmt.Println(btSendData)
+	// fmt.Println(btSendData)
 	fmt.Println(string(btSendData))
 
 	// HTTP 로 요청 전송
-	// -- NOTE : 2022.12.02 http.Client{} > http.NewRequest > http.Client{}.do 로 하면 응답 헤더가 제대로 넘어오지 않아서 http.Post 로 변경함
 	parsedUrl, _ := url.Parse("http://localhost:1234/" + strSendData)
+
+	// NewRequest 하여 client 의 Do 로 실행하는 방식 (이 방식의 response 처리가 문제가 있는 것으로 보았으나, 인터넷 쿠키의 문제로 갱신 안되고 있던 것으로 보임)
+	// client := http.Client{}
+	// req, _ := http.NewRequest(http.MethodPost, parsedUrl.String(), bytes.NewBuffer(btSendData))
+	// res, errRequest := client.Do(req)
+
+	// Post 메서드로 실행하는 방식
 	res, errRequest := http.Post(parsedUrl.String(), strContentType, bytes.NewBuffer(btSendData))
+
 	if errRequest != nil {
-		log.Panicln(errRequest.Error())
+		fmt.Printf("http.Post Error : '%v'\n", errRequest.Error())
 		return nil, false
 	}
 	fmt.Printf("http response status = '%v'\n", res.Status)
