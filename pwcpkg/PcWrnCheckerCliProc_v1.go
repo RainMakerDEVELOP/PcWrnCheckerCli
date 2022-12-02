@@ -40,7 +40,7 @@ func Run() bool {
 	fmt.Printf("readArg() ret strType = '%v'\n", strType)
 
 	// [PROC] 서버 전송
-	resp, bReqRet := reqClient(strType)
+	resp, bReqRet := reqClient(strType, "application/json")
 	if !bReqRet {
 		fmt.Println("http request FAILED")
 		return false
@@ -52,22 +52,25 @@ func Run() bool {
 
 	// [PROC] 첫번째 전송 성공인지 응답 체크
 	if resp.StatusCode == http.StatusOK {
-		// goroutine 실행하여 주기적으로 전송
+		// 응답 데이터 헤더 Content-Type 조사
+		if strings.Compare(resp.Header.Get("Content-Type"), "Content-Type") == 0 {
+			// [PROC] goroutine 실행하여 주기적으로 전송
 
-		// 응답 데이터 파싱 테스트용 코드 START
-		body, errIoRead := ioutil.ReadAll(resp.Body)
-		if errIoRead != nil {
-			log.Panicln(errIoRead.Error())
-		} else {
-			errUnmarshal := json.Unmarshal(body, &respData)
-
-			if errUnmarshal != nil {
-				log.Panicln(errUnmarshal.Error())
+			// 응답 데이터 파싱 테스트용 코드 START
+			body, errIoRead := ioutil.ReadAll(resp.Body)
+			if errIoRead != nil {
+				log.Panicln(errIoRead.Error())
 			} else {
-				fmt.Printf("Response Data Parse : '%v'\n", respData)
+				errUnmarshal := json.Unmarshal(body, &respData)
+
+				if errUnmarshal != nil {
+					log.Panicln(errUnmarshal.Error())
+				} else {
+					fmt.Printf("Response Data Parse : '%v'\n", respData)
+				}
 			}
+			// 응답 데이터 파싱 테스트용 코드 END
 		}
-		// 응답 데이터 파싱 테스트용 코드 END
 	}
 
 	// [PROC] 주기적 전송 루틴이 goroutine 으로 실행되므로, goroutine 종료전에 리턴되면 안되므로 체크하여 기다리는 루틴 삽입
@@ -109,7 +112,7 @@ func makeJsonData(data string) ([]byte, error) {
 	return json.Marshal(stData)
 }
 
-func reqClient(strSendData string) (*http.Response, bool) {
+func reqClient(strSendData string, strContentType string) (*http.Response, bool) {
 	// 서버 전송용 JSON 설정
 	btSendData, marshalErr := makeJsonData(strSendData)
 	if marshalErr != nil {
@@ -124,17 +127,11 @@ func reqClient(strSendData string) (*http.Response, bool) {
 	fmt.Println(btSendData)
 	fmt.Println(string(btSendData))
 
-	// HTTP 전송
-	client := http.Client{}
+	// HTTP 로 요청 전송
+	// -- NOTE : 2022.12.02 http.Client{} > http.NewRequest > http.Client{}.do 로 하면 응답 헤더가 제대로 넘어오지 않아서 http.Post 로 변경함
 	parsedUrl, _ := url.Parse("http://localhost:1234/" + strSendData)
-	req, errRequest := http.NewRequest(http.MethodPost, parsedUrl.String(), bytes.NewBuffer(btSendData))
+	res, errRequest := http.Post(parsedUrl.String(), strContentType, bytes.NewBuffer(btSendData))
 	if errRequest != nil {
-		log.Panicln(errRequest.Error())
-		return nil, false
-	}
-
-	res, err := client.Do(req)
-	if err != nil {
 		log.Panicln(errRequest.Error())
 		return nil, false
 	}
