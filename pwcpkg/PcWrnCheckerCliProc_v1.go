@@ -8,7 +8,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"net/url"
@@ -57,7 +57,7 @@ func Run() bool {
 			// [PROC] goroutine 실행하여 주기적으로 전송
 
 			// 응답 데이터 파싱 테스트용 코드 START
-			body, errIoRead := ioutil.ReadAll(resp.Body)
+			body, errIoRead := io.ReadAll(resp.Body)
 			if errIoRead != nil {
 				log.Panicln(errIoRead.Error())
 			} else {
